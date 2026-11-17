@@ -35,7 +35,7 @@ def test_summarize_uses_summary_model():
 def test_config_load_and_validate(tmp_path, monkeypatch):
     opts = tmp_path / "options.json"
     opts.write_text(json.dumps({
-        "anthropic_api_key": "k", "drive_token": "{\"access_token\":\"a\"}",
+        "provider": "claude_api", "anthropic_api_key": "k", "drive_token": "{\"access_token\":\"a\"}",
         "notebooks": [{"name": "Kompan", "drive_path": "/onyx/Kompan.pdf"}],
     }))
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
@@ -44,3 +44,35 @@ def test_config_load_and_validate(tmp_path, monkeypatch):
     assert config.validate(cfg) == []
     cfg.drive_token = "ikke json"
     assert any("drive_token" in p for p in config.validate(cfg))
+
+
+def test_gemini_request_and_parsing():
+    from app.gemini import Gemini
+
+    g = Gemini("nøgle", "gemini-flash-latest")
+    seen = {}
+
+    def fake_post(payload):
+        seen.update(payload)
+        body = '```json\n{"is_blank": false, "date": "2026-11-17", "title": "t", "raw_text": "r", "corrected_text": "c"}\n```'
+        return {"candidates": [{"content": {"parts": [{"thought": True, "text": "tanker"}, {"text": body}]}}]}
+
+    g._post = fake_post
+    out = g.transcribe(b"%PDF-1.7 test", "Kompan", "", "2026-11-17")
+    assert out["corrected_text"] == "c" and out["tasks"] == [] and out["date"] == "2026-11-17"
+    part = seen["contents"][0]["parts"][0]["inline_data"]
+    assert part["mime_type"] == "application/pdf"
+    assert seen["generationConfig"]["responseMimeType"] == "application/json"
+    assert "properties" in seen["generationConfig"]["responseJsonSchema"]
+
+
+def test_provider_validation_and_routing(tmp_path):
+    cfg = config.Config(
+        provider="gemini", gemini_api_key="g", drive_token="{}",
+        notebooks=[config.Notebook("A", "a.pdf"), config.Notebook("B", "b.pdf", provider="claude_api")],
+    )
+    assert any("anthropic_api_key" in p for p in config.validate(cfg))
+    cfg.anthropic_api_key = "k"
+    assert config.validate(cfg) == []
+    cfg.notebooks[0].provider = "ukendt"
+    assert any("Ukendt provider" in p for p in config.validate(cfg))

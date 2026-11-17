@@ -10,11 +10,16 @@ class Notebook:
     drive_path: str
     category: str = "Kursus"
     hint: str = ""
+    provider: str = ""
+    folder: str = ""
 
 
 @dataclass
 class Config:
+    provider: str = "gemini"
     anthropic_api_key: str = ""
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-flash-latest"
     model: str = "claude-sonnet-5-5"
     summary_model: str = "claude-sonnet-5-5"
     language: str = "da"
@@ -58,6 +63,8 @@ def load(path: str = "") -> Config:
             drive_path=n["drive_path"].strip().strip("/"),
             category=(n.get("category") or "Kursus").strip(),
             hint=(n.get("hint") or "").strip(),
+            provider=(n.get("provider") or "").strip(),
+            folder=(n.get("folder") or "").strip().strip("/"),
         )
         for n in raw.get("notebooks", [])
     ]
@@ -66,8 +73,14 @@ def load(path: str = "") -> Config:
 
 def validate(cfg: Config) -> List[str]:
     problems = []
-    if not cfg.anthropic_api_key:
-        problems.append("anthropic_api_key mangler")
+    used = {n.provider or cfg.provider for n in cfg.notebooks}
+    unknown = used - {"claude_api", "gemini"}
+    if unknown:
+        problems.append("Ukendt provider: " + ", ".join(sorted(unknown)))
+    if "claude_api" in used and not cfg.anthropic_api_key:
+        problems.append("anthropic_api_key mangler (bruges af mindst en notesbog)")
+    if "gemini" in used and not cfg.gemini_api_key:
+        problems.append("gemini_api_key mangler (bruges af mindst en notesbog)")
     if not cfg.notebooks:
         problems.append("Der er ingen notesboeger i indstillingerne")
     if not cfg.drive_token:

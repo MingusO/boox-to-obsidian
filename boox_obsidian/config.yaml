@@ -14,6 +14,9 @@ map:
   - share:rw
   - addon_config:rw
 options:
+  provider: gemini
+  gemini_api_key: ""
+  gemini_model: gemini-flash-latest
   anthropic_api_key: ""
   model: claude-sonnet-5-5
   summary_model: claude-sonnet-5-5
@@ -39,20 +42,21 @@ options:
   obsidian_mfa: ""
   obsidian_e2ee_password: ""
   notebooks:
-    - name: Kompan
-      drive_path: onyx/NoteAir5C/Notebooks/Kompan.pdf
-      category: Arbejde
-      hint: ""
     - name: Konceptudvikling og Innovation
       drive_path: onyx/NoteAir5C/Notebooks/Konceptudvikling og Innovation.pdf
       category: Studie
+      folder: 02 UNI/Konceptudvikling og Innovation/Boox
       hint: ""
     - name: Kommunikation og Samarbejde i Organisationer
       drive_path: onyx/NoteAir5C/Notebooks/Kommunikation og Sammarbejde i Organisationer.pdf
       category: Studie
+      folder: 02 UNI/Kommunikation og Samarbejde i Organisationer/Boox
       hint: ""
 schema:
-  anthropic_api_key: password
+  provider: list(claude_api|gemini)
+  gemini_api_key: password?
+  gemini_model: str
+  anthropic_api_key: password?
   model: str
   summary_model: str
   language: list(da|en)
@@ -81,3 +85,5 @@ schema:
       drive_path: str
       category: str?
       hint: str?
+      provider: list(claude_api|gemini)?
+      folder: str?

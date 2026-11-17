@@ -253,3 +253,24 @@ def test_danish_daily_format_and_nested_folder(env):
     pipe.run_cycle()
     expected = vault_dir / "01 PRIVATE" / "Dagbog" / "2026" / "11" / "17. november 2026 tirsdag.md"
     assert expected.exists()
+
+
+def test_notebook_folder_and_provider_routing(tmp_path):
+    cfg = Config(
+        vault_path=str(tmp_path / "vault"), data_dir=str(tmp_path / "data"), import_existing=True,
+        provider="gemini",
+        notebooks=[Notebook("Kompan", "x/Kompan.pdf", "Arbejde", provider="claude_api", folder="04 Kompan/Boox")],
+    )
+    pdf = tmp_path / "Kompan.pdf"
+    make_pdf(str(pdf), ["a"])
+    clock = {"now": datetime(2026, 11, 17, 10, 0, tzinfo=timezone.utc)}
+    gemini, claude = FakeClaude(), FakeClaude()
+    pipe = Pipeline(cfg, State(":memory:"), {"gemini": gemini, "claude_api": claude},
+                    lambda nb: str(pdf), NullNotifier(), NullSync(), lambda: clock["now"])
+    pipe.run_cycle()
+    clock["now"] += timedelta(minutes=31)
+    pipe.run_cycle()
+    assert claude.calls == 1 and gemini.calls == 0
+    base = tmp_path / "vault" / "04 Kompan" / "Boox"
+    assert (base / "Kompan 2026-11-17.md").exists()
+    assert len(list((base / "Bilag").glob("*.pdf"))) == 1

@@ -40,13 +40,16 @@ class Pipeline:
     ):
         self.cfg = cfg
         self.state = state
-        self.claude = claude
+        self.providers = claude if isinstance(claude, dict) else {"*": claude}
         self.fetch = fetch
         self.notifier = notifier
         self.obsidian = obsidian
         self.tz = ZoneInfo(cfg.timezone)
         self.now_fn = now_fn or (lambda: datetime.now(timezone.utc))
         self.changed = False
+
+    def _llm(self, nb: Notebook):
+        return self.providers.get(nb.provider or self.cfg.provider) or self.providers["*"]
 
     # Hovedloeb ---------------------------------------------------------
 
@@ -144,7 +147,7 @@ class Pipeline:
     def _process(self, nb: Notebook, row, path: str, now: datetime) -> None:
         data = pdfpages.page_pdf(path, row["idx"])
         today_local = now.astimezone(self.tz).date()
-        result = self.claude.transcribe(data, nb.name, nb.hint, today_local.isoformat())
+        result = self._llm(nb).transcribe(data, nb.name, nb.hint, today_local.isoformat())
 
         first_seen_local = parse_iso(row["first_seen"]).astimezone(self.tz).date().isoformat()
         page_date = self._valid_date(result.get("date"), today_local) or row["date"] or first_seen_local
@@ -155,7 +158,7 @@ class Pipeline:
         pdf_name = ""
         if not blank:
             pdf_name = f"{safe_name(nb.name)}_{row['id']}_{row['pkey'][:8]}.pdf"
-            target = os.path.join(self.cfg.vault_path, self.cfg.attachments_folder, safe_name(nb.name), pdf_name)
+            target = os.path.join(self._attach_dir(nb), pdf_name)
             vault.write_bytes(target, data)
         if row["pdf_name"] and row["pdf_name"] != pdf_name:
             self._delete_attachment(nb, row["pdf_name"])
@@ -193,7 +196,7 @@ class Pipeline:
     def _delete_attachment(self, nb: Notebook, pdf_name: str) -> None:
         if not pdf_name:
             return
-        p = os.path.join(self.cfg.vault_path, self.cfg.attachments_folder, safe_name(nb.name), pdf_name)
+        p = os.path.join(self._attach_dir(nb), pdf_name)
         try:
             os.remove(p)
         except FileNotFoundError:
@@ -204,14 +207,18 @@ class Pipeline:
     def _note_basename(self, nb: Notebook, date: str) -> str:
         return f"{safe_name(nb.name)} {date}"
 
+    def _note_dir(self, nb: Notebook) -> str:
+        if nb.folder:
+            return os.path.join(self.cfg.vault_path, nb.folder)
+        return os.path.join(self.cfg.vault_path, self.cfg.notes_folder, safe_name(nb.category), safe_name(nb.name))
+
+    def _attach_dir(self, nb: Notebook) -> str:
+        if nb.folder:
+            return os.path.join(self.cfg.vault_path, nb.folder, "Bilag")
+        return os.path.join(self.cfg.vault_path, self.cfg.attachments_folder, safe_name(nb.name))
+
     def _note_path(self, nb: Notebook, date: str) -> str:
-        return os.path.join(
-            self.cfg.vault_path,
-            self.cfg.notes_folder,
-            safe_name(nb.category),
-            safe_name(nb.name),
-            self._note_basename(nb, date) + ".md",
-        )
+        return os.path.join(self._note_dir(nb), self._note_basename(nb, date) + ".md")
 
     def _render_note(self, nb: Notebook, date: str) -> None:
         rows = self.state.pages_for_date(nb.name, date)
@@ -271,7 +278,7 @@ class Pipeline:
                 if budget["summaries"] <= 0:
                     return
                 pages = [{"idx": r["idx"], "title": r["title"], "text": r["text"]} for r in rows]
-                text = self.claude.summarize(nb.name, d, pages, nb.hint)
+                text = self._llm(nb).summarize(nb.name, d, pages, nb.hint)
                 self.state.set_summary(nb.name, d, input_hash, text)
                 self._write_daily(nb, d, text)
                 budget["summaries"] -= 1

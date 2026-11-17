@@ -8,7 +8,7 @@ Tid: ca. 45 minutter første gang.
 
 1. Overblik
 2. Det skal du have klar
-3. Trin 1: Anthropic API nøgle
+3. Trin 1: Vælg AI udbyder og få en nøgle
 4. Trin 2: Tjek at Boox lægger PDF'erne i Drive
 5. Trin 3: Giv programmet læseadgang til Drive
 6. Trin 4: Installér add on'et i Home Assistant
@@ -49,16 +49,34 @@ Hvorfor Home Assistant Green? Den er tændt døgnet rundt, har 4 GB RAM, kører 
 * Home Assistant Green (Home Assistant OS) med adgang til indstillinger som administrator.
 * Add on'et "Terminal & SSH" i Home Assistant (du har det allerede).
 * En Mac eller PC til at logge ind på Google én gang (til rclone).
-* En Anthropic konto med betalingskort.
+* En gratis Google konto til Gemini nøgle (eller en Anthropic konto med betalingskort, hvis du vælger Claude API).
 * Obsidian Sync abonnement, hvis du vil bruge Obsidian Headless (se trin 7).
 * Et GitHub repo med denne kode. Din version ligger på `https://github.com/MingusO/boox-to-obsidian`.
 
-## 3. Trin 1: Anthropic API nøgle
+## 3. Trin 1: Vælg AI udbyder og få en nøgle
+
+Programmet kan bruge to udbydere. Du kan vælge pr. notesbog.
+
+**A. Google Gemini, gratis niveau (standard).** Koster ingenting, men har begrænsninger:
+
+1. Gå til `aistudio.google.com`, log ind og vælg Get API key. Opret en nøgle.
+2. Tjek i AI Studio, hvilken Flash model der er tilgængelig på gratis niveau, og skriv navnet i `gemini_model`. Standarden `gemini-flash-latest` peger på den nyeste Flash model.
+3. Gem nøglen i din adgangskodemanager.
+4. **Privatliv:** På gratis niveau kan Google bruge dine data til at forbedre sine produkter. Brug det derfor ikke til noter, du ikke vil dele med Google. Det gælder især arbejdsnoter. Betalt niveau bruger ikke dine data på den måde, men koster penge.
+5. Kvoter og modeller ændrer sig ofte. Programmet venter mellem kald og prøver igen ved kvotefejl, og siderne tages så over flere runder.
+
+Dit Gemini abonnement (Google AI Pro til studerende) giver ikke API adgang. Den gratis API nøgle fra AI Studio er en separat ting.
+
+**B. Anthropic Claude API (betalt, bedre privatliv).**
 
 1. Gå til `console.anthropic.com` og log ind.
-2. Under Billing: tilføj betalingskort og sæt en **månedlig udgiftsgrænse**. Sæt den lavt til at starte med, fx 100 kroner.
-3. Under API keys: opret en nøgle med navnet "Boox HA". Kopiér den med det samme, du kan ikke se den igen.
-4. Gem nøglen i din adgangskodemanager (du har Vaultwarden i Home Assistant). Den skal ikke i chat, mails eller GitHub.
+2. Under Billing: tilføj betalingskort eller køb et lille beløb forudbetalt, og sæt en **månedlig udgiftsgrænse**.
+3. Under API keys: opret en nøgle. Kopiér den med det samme.
+4. Dit Claude Pro abonnement dækker ikke API brug. Det er et separat regnskab. Det samme gælder ChatGPT Plus og Copilot.
+
+Sæt `provider` til `gemini` eller `claude_api`. Du kan overstyre pr. notesbog med et `provider` felt. Se trin 5.
+
+GitHub Student Developer Pack giver ikke adgang til denne type API. Brug det til andre ting, fx Copilot i din editor.
 
 ## 4. Trin 2: Tjek at Boox lægger PDF'erne i Drive
 
@@ -135,7 +153,9 @@ Første installation bygger Docker billedet på selve Home Assistant Green. Det 
 Åbn add on'et, fanen Konfiguration. Du kan skifte til YAML visning via menuen med tre prikker. Eksempel:
 
 ```yaml
-anthropic_api_key: "sk-ant-..."
+provider: gemini
+gemini_api_key: "AIza..."
+gemini_model: gemini-flash-latest
 drive_token: '{"access_token":"...","token_type":"Bearer","refresh_token":"...","expiry":"..."}'
 model: claude-sonnet-5-5
 summary_model: claude-sonnet-5-5
@@ -155,25 +175,25 @@ summary_hour: 21
 notify_service: ""
 obsidian_sync: false
 notebooks:
-  - name: Kompan
-    drive_path: onyx/NoteAir5C/Notebooks/Kompan.pdf
-    category: Arbejde
-    hint: "Noter fra mit arbejde."
   - name: Konceptudvikling og Innovation
     drive_path: onyx/NoteAir5C/Notebooks/Konceptudvikling og Innovation.pdf
     category: Studie
+    folder: 02 UNI/Konceptudvikling og Innovation/Boox
     hint: "Universitetskursus. Skriv kursets emne og vigtige fagudtryk her."
   - name: Kommunikation og Samarbejde i Organisationer
     drive_path: onyx/NoteAir5C/Notebooks/Kommunikation og Sammarbejde i Organisationer.pdf
     category: Studie
+    folder: 02 UNI/Kommunikation og Samarbejde i Organisationer/Boox
     hint: "Universitetskursus. Skriv kursets emne og vigtige fagudtryk her."
 ```
 
 Vigtigste valg:
 
 * **import_existing**: `false` betyder, at siderne der allerede findes i notesbogen ved første start springes over, og kun nye sider læses. Sæt til `true`, hvis du også vil have de eksisterende sider læst. Siderne får så den dato, de har skrevet på siden, eller første gang de blev set, så skriv datoer på siderne, hvis du vil have dem placeret rigtigt. Du kan skifte fra `false` til `true` senere.
+* **folder**: Mappen i vaulten, hvor notesbogens noter lægges. PDF'er af siderne lægges i en mappe `Bilag` under den. Udelades `folder`, bruges `notes_folder/kategori/notesbog`. Din Kompan notesbog skal ligge under `04 Kompan`, fx `folder: 04 Kompan/Boox`.
+* **provider** (pr. notesbog): Overstyrer standardudbyderen for den ene notesbog.
 * **hint**: En sætning om kurset hjælper Claude med at læse fagudtryk rigtigt. Fx "Kursus i kompetenceudvikling, begreber: organisationslæring, tavs viden."
-* **model og summary_model**: Skift summary_model til en billigere model, hvis du vil spare. Kvaliteten på selve håndskriftslæsningen er vigtigst.
+* **model og summary_model** (kun for `claude_api`): Skift summary_model til en billigere model, hvis du vil spare. Kvaliteten på selve håndskriftslæsningen er vigtigst.
 * **daily_format**: Skal matche dit format i Obsidian under Indstillinger, Daglige noter, Datoformat. Din vault bruger `D. MMMM YYYY dddd`, som giver `4. september 2026 fredag`. Understøttede dele er YYYY, MMMM (måned med navn), MM, M, dddd (ugedag), DD og D. Måneder og ugedage skrives på dansk.
 * **daily_folder**: Mappen til daglige noter. YYYY og MM erstattes med år og måned, så `01 PRIVATE/Dagbog/YYYY/MM` giver `01 PRIVATE/Dagbog/2026/09`.
 * **notes_folder**: Hvor notesbøgerne lægges i vaulten. Standard er mappen `Boox`, og under den kommer `Arbejde` og `Studie` med en mappe pr. notesbog. Ret den, hvis du vil have dem et andet sted.
@@ -327,7 +347,9 @@ Navnet (`name`) skal være unikt og bliver brugt som mappenavn. Ændrer du et na
 * **"drive_token er ikke gyldig JSON"**: Hele blokken fra rclone skal med, inkl. tuborgparenteser. Brug enkelte citationstegn rundt om i YAML.
 * **"rclone fejl ... directory not found"**: Stien er forkert. Husk at udelade "Mit drev" og tjek store og små bogstaver.
 * **"rclone fejl ... invalid_grant"**: Koden er udløbet. Kør `rclone authorize "drive"` igen.
-* **"HTTP 401" fra Claude**: API nøglen er forkert eller deaktiveret.
+* **"HTTP 401", "403" eller "400 API key not valid"**: API nøglen er forkert eller deaktiveret.
+* **"HTTP 429" fra Gemini, ofte**: Gratis kvoten er brugt op for i dag eller minuttet. Siderne tages i de næste runder. Sænk `max_pages_per_run` eller skift model.
+* **"HTTP 404" fra Gemini**: Modelnavnet findes ikke længere. Tjek AI Studio og ret `gemini_model`.
 * **"HTTP 429" eller "529"**: For mange kald eller overbelastet. Programmet prøver selv igen.
 * **"HTTP 400 ... credit balance"**: Der er ikke penge på Anthropic kontoen.
 * **Intet sker, selvom du skriver**: Siden skal have været uændret `settle_minutes`. Tjek også at Boox faktisk har synkroniseret.
@@ -355,10 +377,11 @@ Derefter, Indstillinger, Apps, Butik, menuen med tre prikker, Tjek for opdaterin
 
 ## 15. Sikkerhed og pris
 
-* Dine noter sendes til Drive (Boox) og til Anthropic API (til læsning). Anthropics regler for API data finder du hos Anthropic. Dine noter fra arbejdet er med, fordi du har sagt ok.
-* API nøglen og Drive koden ligger i add on'ets indstillinger i Home Assistant. Giv ikke andre adgang til din Home Assistant konto, og tag en backup med kryptering (Google Drive Backup kan kryptere med adgangskode).
+* **Hvor går dine noter hen?** Til Google Drive (Boox) og til den AI udbyder, du vælger pr. notesbog. Med Gemini gratis niveau kan Google bruge dem til at forbedre sine produkter. Med Claude API gør Anthropic ikke det som standard.
+* **Arbejdsnoter (Kompan):** Brug ikke gratis Gemini til dem, medmindre din arbejdsgiver er indforstået. Alternativer er Claude API med et lille forudbetalt beløb og en lav udgiftsgrænse, eller at lade være med at lægge den notesbog ind.
+* **Pris:** Gemini gratis niveau koster 0 kroner, men har kvoter, og vilkårene kan ændre sig. Claude API koster pr. side. Sæt altid en månedlig grænse, og følg forbruget de første dage.
+* API nøgler og Drive koden ligger i add on'ets indstillinger i Home Assistant. Giv ikke andre adgang til din Home Assistant konto, og kryptér dine backups (Google Drive Backup kan kryptere med adgangskode).
 * Slå Telnet fra på din Synology. Det sender adgangskoden ukrypteret.
-* Pris: Du betaler pr. side til Claude plus dagsopsummeringen. Der er et loft pr. runde (`max_pages_per_run`), og du bør sætte en månedlig grænse hos Anthropic. Følg forbruget under Usage på `console.anthropic.com` de første dage, og vælg billigere modeller, hvis det bliver for dyrt.
 
 ## 16. Sådan er det bygget
 

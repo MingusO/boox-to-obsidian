@@ -7,6 +7,7 @@ import threading
 from . import __version__, config
 from .claude import Claude
 from .drive import Drive
+from .gemini import Gemini
 from .notify import Notifier
 from .obsidian_sync import NullSync, ObsidianSync
 from .pipeline import Pipeline
@@ -28,11 +29,16 @@ def main() -> int:
 
     os.makedirs(cfg.vault_path, exist_ok=True)
     state = State(os.path.join(cfg.data_dir, "state.db"))
-    claude = Claude(cfg.anthropic_api_key, cfg.model, cfg.summary_model, cfg.language)
+    used = {n.provider or cfg.provider for n in cfg.notebooks}
+    providers = {}
+    if "claude_api" in used:
+        providers["claude_api"] = Claude(cfg.anthropic_api_key, cfg.model, cfg.summary_model, cfg.language)
+    if "gemini" in used:
+        providers["gemini"] = Gemini(cfg.gemini_api_key, cfg.gemini_model, cfg.language)
     drive = Drive(cfg)
     obsidian = ObsidianSync(cfg) if cfg.obsidian_sync else NullSync()
     obsidian.ensure_setup()
-    pipeline = Pipeline(cfg, state, claude, drive.fetch, Notifier(cfg.notify_service), obsidian)
+    pipeline = Pipeline(cfg, state, providers, drive.fetch, Notifier(cfg.notify_service), obsidian)
 
     stop = threading.Event()
     for sig in (signal.SIGTERM, signal.SIGINT):

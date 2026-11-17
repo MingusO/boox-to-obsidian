@@ -25,15 +25,15 @@ options:
   import_existing: false
   timezone: Europe/Copenhagen
   vault_path: /share/obsidian_vault
-  notes_folder: Noter
-  attachments_folder: Noter/Bilag
-  daily_folder: Daily
-  daily_format: YYYY-MM-DD
+  notes_folder: Boox
+  attachments_folder: Boox/Bilag
+  daily_folder: 01 PRIVATE/Dagbog/YYYY/MM
+  daily_format: D. MMMM YYYY dddd
   daily_template: ""
   summary_hour: 21
   notify_service: ""
   obsidian_sync: false
-  obsidian_vault_name: ""
+  obsidian_vault_name: "Mingus' Vault"
   obsidian_email: ""
   obsidian_password: ""
   obsidian_mfa: ""
@@ -41,7 +41,15 @@ options:
   notebooks:
     - name: Kompan
       drive_path: onyx/NoteAir5C/Notebooks/Kompan.pdf
-      category: Kursus
+      category: Arbejde
+      hint: ""
+    - name: Konceptudvikling og Innovation
+      drive_path: onyx/NoteAir5C/Notebooks/Konceptudvikling og Innovation.pdf
+      category: Studie
+      hint: ""
+    - name: Kommunikation og Samarbejde i Organisationer
+      drive_path: onyx/NoteAir5C/Notebooks/Kommunikation og Sammarbejde i Organisationer.pdf
+      category: Studie
       hint: ""
 schema:
   anthropic_api_key: password

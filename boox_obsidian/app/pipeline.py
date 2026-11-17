@@ -12,7 +12,7 @@ from . import pdfpages, vault
 from .claude import ClaudeError
 from .config import Config, Notebook
 from .state import State
-from .util import block_id, format_date, parse_iso, safe_name, sha, utc_iso
+from .util import block_id, format_date, format_folder, parse_iso, safe_name, sha, utc_iso
 
 log = logging.getLogger("pipeline")
 
@@ -279,7 +279,11 @@ class Pipeline:
 
     def _daily_path(self, date: str) -> str:
         d = date_cls.fromisoformat(date)
-        return os.path.join(self.cfg.vault_path, self.cfg.daily_folder, format_date(self.cfg.daily_format, d) + ".md")
+        return os.path.join(
+            self.cfg.vault_path,
+            format_folder(self.cfg.daily_folder, d),
+            format_date(self.cfg.daily_format, d) + ".md",
+        )
 
     def _daily_header(self, date: str) -> str:
         tpl = self.cfg.daily_template

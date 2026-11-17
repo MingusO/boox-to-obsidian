@@ -233,3 +233,23 @@ def test_existing_pages_skipped_until_import_enabled(env):
     clock["now"] += timedelta(minutes=31)
     pipe.run_cycle()
     assert claude.calls == 3
+
+
+def test_danish_daily_format_and_nested_folder(env):
+    from datetime import date
+    from app.util import format_date, format_folder
+
+    assert format_date("D. MMMM YYYY dddd", date(2026, 9, 4)) == "4. september 2026 fredag"
+    assert format_date("D. MMMM YYYY dddd", date(2026, 9, 5)) == "5. september 2026 lørdag"
+    assert format_date("YYYY-MM-DD", date(2026, 9, 4)) == "2026-09-04"
+    assert format_folder("01 PRIVATE/Dagbog/YYYY/MM", date(2026, 9, 4)) == "01 PRIVATE/Dagbog/2026/09"
+
+    pipe, claude, pdf, clock, vault_dir = env
+    pipe.cfg.daily_folder = "01 PRIVATE/Dagbog/YYYY/MM"
+    pipe.cfg.daily_format = "D. MMMM YYYY dddd"
+    make_pdf(str(pdf), ["a"])
+    pipe.run_cycle()
+    clock["now"] = datetime(2026, 11, 17, 21, 30, tzinfo=timezone.utc)
+    pipe.run_cycle()
+    expected = vault_dir / "01 PRIVATE" / "Dagbog" / "2026" / "11" / "17. november 2026 tirsdag.md"
+    assert expected.exists()

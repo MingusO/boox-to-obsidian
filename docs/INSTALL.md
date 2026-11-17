@@ -146,10 +146,10 @@ max_pages_per_run: 25
 import_existing: false
 timezone: Europe/Copenhagen
 vault_path: /share/obsidian_vault
-notes_folder: Noter
-attachments_folder: Noter/Bilag
-daily_folder: Daily
-daily_format: YYYY-MM-DD
+notes_folder: Boox
+attachments_folder: Boox/Bilag
+daily_folder: 01 PRIVATE/Dagbog/YYYY/MM
+daily_format: D. MMMM YYYY dddd
 daily_template: ""
 summary_hour: 21
 notify_service: ""
@@ -157,8 +157,16 @@ obsidian_sync: false
 notebooks:
   - name: Kompan
     drive_path: onyx/NoteAir5C/Notebooks/Kompan.pdf
-    category: Kursus
-    hint: "Kursus på universitetet. Skriv fagets emne og vigtige fagudtryk her."
+    category: Arbejde
+    hint: "Noter fra mit arbejde."
+  - name: Konceptudvikling og Innovation
+    drive_path: onyx/NoteAir5C/Notebooks/Konceptudvikling og Innovation.pdf
+    category: Studie
+    hint: "Universitetskursus. Skriv kursets emne og vigtige fagudtryk her."
+  - name: Kommunikation og Samarbejde i Organisationer
+    drive_path: onyx/NoteAir5C/Notebooks/Kommunikation og Sammarbejde i Organisationer.pdf
+    category: Studie
+    hint: "Universitetskursus. Skriv kursets emne og vigtige fagudtryk her."
 ```
 
 Vigtigste valg:
@@ -166,8 +174,9 @@ Vigtigste valg:
 * **import_existing**: `false` betyder, at siderne der allerede findes i notesbogen ved første start springes over, og kun nye sider læses. Sæt til `true`, hvis du også vil have de eksisterende sider læst. Siderne får så den dato, de har skrevet på siden, eller første gang de blev set, så skriv datoer på siderne, hvis du vil have dem placeret rigtigt. Du kan skifte fra `false` til `true` senere.
 * **hint**: En sætning om kurset hjælper Claude med at læse fagudtryk rigtigt. Fx "Kursus i kompetenceudvikling, begreber: organisationslæring, tavs viden."
 * **model og summary_model**: Skift summary_model til en billigere model, hvis du vil spare. Kvaliteten på selve håndskriftslæsningen er vigtigst.
-* **daily_format**: Skal matche dit format i Obsidian under Indstillinger, Daglige noter, Datoformat. Understøttede dele er YYYY, MM og DD.
-* **daily_folder**: Skal matche din mappe til daglige noter.
+* **daily_format**: Skal matche dit format i Obsidian under Indstillinger, Daglige noter, Datoformat. Din vault bruger `D. MMMM YYYY dddd`, som giver `4. september 2026 fredag`. Understøttede dele er YYYY, MMMM (måned med navn), MM, M, dddd (ugedag), DD og D. Måneder og ugedage skrives på dansk.
+* **daily_folder**: Mappen til daglige noter. YYYY og MM erstattes med år og måned, så `01 PRIVATE/Dagbog/YYYY/MM` giver `01 PRIVATE/Dagbog/2026/09`.
+* **notes_folder**: Hvor notesbøgerne lægges i vaulten. Standard er mappen `Boox`, og under den kommer `Arbejde` og `Studie` med en mappe pr. notesbog. Ret den, hvis du vil have dem et andet sted.
 * **daily_template**: Valgfri sti til din skabelon, relativt til vaulten, fx `Templates/Daily.md`. Bruges kun, når programmet selv skal oprette en daglig note. Understøtter `{{date}}`, `{{title}}` og `{{date:YYYY-MM-DD}}`.
 * **notify_service**: Fx `notify.mobile_app_din_telefon`, hvis du vil have besked på telefonen, når nye sider er læst. Find navnet i Udviklerværktøjer, Handlinger.
 
@@ -189,7 +198,7 @@ ls -R /share/obsidian_vault
 ```
 
 ```bash
-cat "/share/obsidian_vault/Noter/Kursus/Kompan/"*.md
+cat "/share/obsidian_vault/Boox/Arbejde/Kompan/"*.md
 ```
 
 Eller installér add on'et "Samba share" og åbn mappen `share` fra din Mac.
@@ -221,7 +230,7 @@ Obsidian har en officiel klient til at synkronisere en vault uden skrivebordsapp
 
 ```yaml
 obsidian_sync: true
-obsidian_vault_name: "Navnet på din vault i Obsidian Sync"
+obsidian_vault_name: "Mingus' Vault"
 obsidian_email: "din Obsidian konto e mail"
 obsidian_password: "din Obsidian adgangskode"
 obsidian_e2ee_password: "krypteringskode, hvis du bruger end to end kryptering"

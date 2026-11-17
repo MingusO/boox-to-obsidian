@@ -22,8 +22,8 @@ Den fulde installationsguide ligger i repoets `docs/INSTALL.md`.
 
 ## Hvad skrives hvor
 
-* `Noter/<kategori>/<notesbog>/<notesbog> <dato>.md` indeholder siderne fra den dag.
-* `Noter/Bilag/<notesbog>/` indeholder en PDF af hver side, som vises i noten.
-* `Daily/<dato>.md` får en sektion pr. notesbog med opsummering og link.
+* `<notes_folder>/<kategori>/<notesbog>/<notesbog> <dato>.md` indeholder siderne fra den dag.
+* `<attachments_folder>/<notesbog>/` indeholder en PDF af hver side, som vises i noten.
+* Den daglige note (efter `daily_folder` og `daily_format`) får en sektion pr. notesbog med opsummering og link.
 
 Alt der genereres ligger mellem `%% boox ... %%` markører. Dine egne tekster udenfor markørerne bliver aldrig rørt. Retter du selv inde i en blok, overskrives den ikke.

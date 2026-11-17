@@ -1,0 +1,75 @@
+name: Boox til Obsidian
+version: "0.1.0"
+slug: boox_obsidian
+description: Laeser haandskrevne Boox noter fra Google Drive med Claude og skriver dem og en daglig log til din Obsidian vault.
+url: https://github.com/MingusO/boox-to-obsidian
+arch:
+  - aarch64
+  - amd64
+startup: services
+boot: auto
+init: false
+homeassistant_api: true
+map:
+  - share:rw
+  - addon_config:rw
+options:
+  anthropic_api_key: ""
+  model: claude-sonnet-5-5
+  summary_model: claude-sonnet-5-5
+  language: da
+  drive_token: ""
+  poll_minutes: 15
+  settle_minutes: 30
+  max_pages_per_run: 25
+  import_existing: false
+  timezone: Europe/Copenhagen
+  vault_path: /share/obsidian_vault
+  notes_folder: Noter
+  attachments_folder: Noter/Bilag
+  daily_folder: Daily
+  daily_format: YYYY-MM-DD
+  daily_template: ""
+  summary_hour: 21
+  notify_service: ""
+  obsidian_sync: false
+  obsidian_vault_name: ""
+  obsidian_email: ""
+  obsidian_password: ""
+  obsidian_mfa: ""
+  obsidian_e2ee_password: ""
+  notebooks:
+    - name: Kompan
+      drive_path: onyx/NoteAir5C/Notebooks/Kompan.pdf
+      category: Kursus
+      hint: ""
+schema:
+  anthropic_api_key: password
+  model: str
+  summary_model: str
+  language: list(da|en)
+  drive_token: password
+  poll_minutes: int(5,1440)
+  settle_minutes: int(0,720)
+  max_pages_per_run: int(1,500)
+  import_existing: bool
+  timezone: str
+  vault_path: str
+  notes_folder: str
+  attachments_folder: str
+  daily_folder: str
+  daily_format: str
+  daily_template: str?
+  summary_hour: int(0,23)
+  notify_service: str?
+  obsidian_sync: bool
+  obsidian_vault_name: str?
+  obsidian_email: str?
+  obsidian_password: password?
+  obsidian_mfa: str?
+  obsidian_e2ee_password: password?
+  notebooks:
+    - name: str
+      drive_path: str
+      category: str?
+      hint: str?

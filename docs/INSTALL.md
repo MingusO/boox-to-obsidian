@@ -91,28 +91,43 @@ Tip: Skriv datoen øverst på hver side. Claude læser den og bruger den som sid
 
 ## 5. Trin 3: Giv programmet læseadgang til Drive
 
-Programmet bruger rclone. Du logger ind på Google på din Mac, og får en kode (token), som du lægger i add on'ets indstillinger.
+Programmet bruger rclone. Du skal bruge dit **eget Google klient id**. rclones fælles klient deles af tusindvis af brugere og rammer næsten altid kvoten (fejlen `rateLimitExceeded` i loggen). Det er gratis og tager ca. 10 minutter.
 
-På din Mac, i Terminal:
+### 5a. Opret klient id i Google Cloud
+
+1. Gå til `console.cloud.google.com` og log ind med den Google konto, hvor Boox gemmer filerne.
+2. Øverst: vælg projekt, Nyt projekt. Kald det "Boox Obsidian". Opret og vælg det.
+3. Menu, APIs og tjenester, Bibliotek. Søg efter **Google Drive API** og tryk Aktivér.
+4. Menu, APIs og tjenester, OAuth consent screen (Google Auth Platform). Opsæt:
+   * Appnavn: Boox Obsidian. Support e mail og kontakt e mail: din egen.
+   * Målgruppe (Audience): **Ekstern** (External).
+   * Under Målgruppe, Publiceringsstatus: tryk **Udgiv app** (Publish app), så status er "I produktion". **Det er vigtigt.** Står den på "Test", udløber din adgang hver 7. dag.
+   * Du får en advarsel om, at appen ikke er verificeret. Det er i orden til personlig brug.
+5. Menu, APIs og tjenester, Legitimationsoplysninger. Opret legitimationsoplysninger, OAuth klient ID, programtype **Computerprogram** (Desktop app). Kopiér **klient id** og **klienthemmelighed**. Gem dem i din adgangskodemanager.
+
+### 5b. Hent adgangskoden (token) på din Mac
+
+I Terminal (erstat med dine to værdier):
 
 ```bash
 brew install rclone
 ```
 
 ```bash
-rclone authorize "drive"
+rclone authorize "drive" "DIT_KLIENT_ID" "DIN_KLIENTHEMMELIGHED"
 ```
 
-1. En browser åbner. Log ind med den Google konto, hvor Boox gemmer filerne, og godkend.
+1. En browser åbner. Log ind og godkend. Du får en advarsel om en ikke verificeret app. Vælg Avanceret, og fortsæt.
 2. Terminalen viser en blok, der ligner `{"access_token":"...","token_type":"Bearer","refresh_token":"...","expiry":"..."}` mellem to linjer med pile.
 3. Kopiér hele JSON blokken, fra første `{` til sidste `}`.
-4. Gem den i din adgangskodemanager. Den skal ind i feltet `drive_token` i trin 5.
+4. I add on'ets indstillinger: `drive_token` får JSON blokken, `drive_client_id` og `drive_client_secret` får de to værdier fra 5a.
 
 Gode at vide:
 
 * Programmet læser kun fra Drive og skriver aldrig. Selve koden bruger kun kommandoen `rclone copyto` fra Drive til hjemmecentralen.
-* Koden du får har bredere rettigheder end programmet bruger. Du kan altid tilbagekalde den på `myaccount.google.com/permissions`.
-* Hvis loggene senere skriver `invalid_grant`, er koden udløbet eller tilbagekaldt. Kør `rclone authorize "drive"` igen og indsæt den nye kode.
+* Koden har bredere rettigheder end programmet bruger. Du kan altid tilbagekalde den på `myaccount.google.com/permissions`.
+* Skriver loggen `rateLimitExceeded`, bruger du stadig den fælles klient. Tjek at klient id og hemmelighed er udfyldt i indstillingerne, og at tokenet er lavet med dem.
+* Skriver loggen `invalid_grant`, er koden udløbet eller tilbagekaldt. Tjek at appen er sat til "I produktion", og kør `rclone authorize` igen.
 
 ## 6. Trin 4: Installér add on'et i Home Assistant
 
@@ -156,6 +171,8 @@ Første installation bygger Docker billedet på selve Home Assistant Green. Det 
 provider: gemini
 gemini_api_key: "AIza..."
 gemini_model: gemini-flash-latest
+drive_client_id: "123456789.apps.googleusercontent.com"
+drive_client_secret: "GOCSPX..."
 drive_token: '{"access_token":"...","token_type":"Bearer","refresh_token":"...","expiry":"..."}'
 model: claude-sonnet-5-5
 summary_model: claude-sonnet-5-5
@@ -351,7 +368,8 @@ Navnet (`name`) skal være unikt og bliver brugt som mappenavn. Ændrer du et na
 * **Loggen siger "Indstilling: anthropic_api_key mangler"**: Feltet er tomt. Udfyld og genstart.
 * **"drive_token er ikke gyldig JSON"**: Hele blokken fra rclone skal med, inkl. tuborgparenteser. Brug enkelte citationstegn rundt om i YAML.
 * **"rclone fejl ... directory not found"**: Stien er forkert. Husk at udelade "Mit drev" og tjek store og små bogstaver.
-* **"rclone fejl ... invalid_grant"**: Koden er udløbet. Kør `rclone authorize "drive"` igen.
+* **"rclone fejl ... invalid_grant"**: Koden er udløbet. Tjek at Google appen er sat til "I produktion", og kør `rclone authorize` igen med dit klient id.
+* **"Google Drive afviste kaldet ... kvoten er brugt op" eller `rateLimitExceeded`**: Du bruger rclones fælles klient. Udfyld `drive_client_id` og `drive_client_secret` (trin 3), og hent et nyt token med dem.
 * **"HTTP 401", "403" eller "400 API key not valid"**: API nøglen er forkert eller deaktiveret.
 * **"HTTP 429" fra Gemini, ofte**: Gratis kvoten er brugt op for i dag eller minuttet. Siderne tages i de næste runder. Sænk `max_pages_per_run` eller skift model.
 * **"HTTP 404" fra Gemini**: Modelnavnet findes ikke længere. Tjek AI Studio og ret `gemini_model`.

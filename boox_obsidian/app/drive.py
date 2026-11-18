@@ -19,7 +19,10 @@ class Drive:
         self._write_conf()
 
     def _write_conf(self) -> None:
-        text = f"[gdrive]\ntype = drive\nscope = drive.readonly\ntoken = {self.cfg.drive_token}\n"
+        text = "[gdrive]\ntype = drive\nscope = drive.readonly\n"
+        if self.cfg.drive_client_id:
+            text += f"client_id = {self.cfg.drive_client_id}\nclient_secret = {self.cfg.drive_client_secret}\n"
+        text += f"token = {self.cfg.drive_token}\n"
         fd = os.open(self.conf, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
         with os.fdopen(fd, "w") as f:
             f.write(text)
@@ -28,7 +31,7 @@ class Drive:
         dest = os.path.join(self.inbox, safe_name(nb.name) + ".pdf")
         cmd = [
             "rclone", "copyto", f"gdrive:{nb.drive_path}", dest,
-            "--config", self.conf, "--retries", "3", "--low-level-retries", "5",
+            "--config", self.conf, "--retries", "2", "--low-level-retries", "3",
         ]
         try:
             res = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
@@ -36,6 +39,13 @@ class Drive:
             log.error("rclone fejlede for %s: %s", nb.name, e)
             return dest if os.path.exists(dest) else None
         if res.returncode != 0:
-            log.error("rclone fejl for %s: %s", nb.name, res.stderr.strip()[-400:])
+            err = res.stderr or ""
+            if "rateLimitExceeded" in err or "RATE_LIMIT_EXCEEDED" in err:
+                log.error(
+                    "Google Drive afviste kaldet for %s fordi kvoten er brugt op. Det sker, naar man bruger rclones "
+                    "faelles klient. Opret dit eget Google client id og udfyld drive_client_id og drive_client_secret "
+                    "(se guiden, trin 3).", nb.name)
+            else:
+                log.error("rclone fejl for %s: %s", nb.name, err.strip()[-400:])
             return dest if os.path.exists(dest) else None
         return dest if os.path.exists(dest) else None

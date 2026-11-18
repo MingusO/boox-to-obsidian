@@ -9,7 +9,8 @@ Den fulde installationsguide ligger i repoets `docs/INSTALL.md`.
 * `provider`: `gemini` (gratis niveau, men Google kan bruge data) eller `claude_api` (betalt). Kan overstyres pr. notesbog.
 * `gemini_api_key` og `gemini_model`: nøgle og model fra Google AI Studio.
 * `anthropic_api_key`: API nøgle fra Anthropic, hvis du bruger `claude_api`.
-* `drive_token`: JSON blokken du fik fra `rclone authorize "drive"`.
+* `drive_token`: JSON blokken du fik fra `rclone authorize`.
+* `drive_client_id` og `drive_client_secret`: dit eget Google klient id og hemmelighed (se guidens trin 3). Uden dem rammer du ofte kvoten på rclones fælles klient.
 * `notebooks`: en række pr. notesbog med `name`, `drive_path` (sti fra roden af Mit drev, uden "Mit drev"), `category` (bruges i standardmappen), `folder` (valgfri mappe i vaulten, fx `04 Kompan/Boox`), `provider` (valgfri) og `hint` (valgfri tekst der hjælper Claude, fx fagets emne og fagudtryk).
 * `model`: modellen der læser siderne. `summary_model`: modellen der laver dagsopsummeringen. Vælg en billigere model for at spare penge.
 * `poll_minutes`: hvor ofte der tjekkes for ændringer.

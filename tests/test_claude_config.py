@@ -76,3 +76,16 @@ def test_provider_validation_and_routing(tmp_path):
     assert config.validate(cfg) == []
     cfg.notebooks[0].provider = "ukendt"
     assert any("Ukendt provider" in p for p in config.validate(cfg))
+
+
+def test_rclone_conf_uses_own_client(tmp_path):
+    from app.drive import Drive
+
+    cfg = config.Config(drive_token='{"a":1}', drive_client_id="id123", drive_client_secret="sec456",
+                        data_dir=str(tmp_path), notebooks=[])
+    d = Drive(cfg)
+    text = open(d.conf).read()
+    assert "client_id = id123" in text and "client_secret = sec456" in text and 'token = {"a":1}' in text
+    assert oct(os.stat(d.conf).st_mode & 0o777) == "0o600"
+    cfg.drive_client_secret = ""
+    assert any("drive_client_id" in p for p in config.validate(cfg))

@@ -1,5 +1,5 @@
 name: Boox til Obsidian
-version: "0.1.0"
+version: "0.1.1"
 slug: boox_obsidian
 description: Laeser haandskrevne Boox noter fra Google Drive med Claude og skriver dem og en daglig log til din Obsidian vault.
 url: https://github.com/MingusO/boox-to-obsidian
@@ -22,6 +22,8 @@ options:
   summary_model: claude-sonnet-5-5
   language: da
   drive_token: ""
+  drive_client_id: ""
+  drive_client_secret: ""
   poll_minutes: 15
   settle_minutes: 30
   max_pages_per_run: 25
@@ -66,6 +68,8 @@ schema:
   summary_model: str
   language: list(da|en)
   drive_token: password
+  drive_client_id: str?
+  drive_client_secret: password?
   poll_minutes: int(5,1440)
   settle_minutes: int(0,720)
   max_pages_per_run: int(1,500)

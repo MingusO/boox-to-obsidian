@@ -24,6 +24,8 @@ class Config:
     summary_model: str = "claude-sonnet-5-5"
     language: str = "da"
     drive_token: str = ""
+    drive_client_id: str = ""
+    drive_client_secret: str = ""
     poll_minutes: int = 15
     settle_minutes: int = 30
     max_pages_per_run: int = 25
@@ -90,6 +92,8 @@ def validate(cfg: Config) -> List[str]:
             json.loads(cfg.drive_token)
         except ValueError:
             problems.append("drive_token er ikke gyldig JSON. Kopier hele blokken fra rclone authorize")
+    if bool(cfg.drive_client_id) != bool(cfg.drive_client_secret):
+        problems.append("drive_client_id og drive_client_secret skal udfyldes begge to eller ingen af dem")
     names = [n.name for n in cfg.notebooks]
     if len(set(names)) != len(names):
         problems.append("Notesboegerne skal have unikke navne")

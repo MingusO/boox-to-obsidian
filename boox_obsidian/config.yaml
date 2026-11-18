@@ -42,6 +42,11 @@ options:
   obsidian_mfa: ""
   obsidian_e2ee_password: ""
   notebooks:
+    - name: Kompan
+      drive_path: onyx/NoteAir5C/Notebooks/Kompan.pdf
+      category: Arbejde
+      folder: 04 Kompan/Boox
+      hint: ""
     - name: Konceptudvikling og Innovation
       drive_path: onyx/NoteAir5C/Notebooks/Konceptudvikling og Innovation.pdf
       category: Studie

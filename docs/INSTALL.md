@@ -175,6 +175,11 @@ summary_hour: 21
 notify_service: ""
 obsidian_sync: false
 notebooks:
+  - name: Kompan
+    drive_path: onyx/NoteAir5C/Notebooks/Kompan.pdf
+    category: Arbejde
+    folder: 04 Kompan/Boox
+    hint: "Noter fra mit arbejde."
   - name: Konceptudvikling og Innovation
     drive_path: onyx/NoteAir5C/Notebooks/Konceptudvikling og Innovation.pdf
     category: Studie
@@ -378,7 +383,7 @@ Derefter, Indstillinger, Apps, Butik, menuen med tre prikker, Tjek for opdaterin
 ## 15. Sikkerhed og pris
 
 * **Hvor går dine noter hen?** Til Google Drive (Boox) og til den AI udbyder, du vælger pr. notesbog. Med Gemini gratis niveau kan Google bruge dem til at forbedre sine produkter. Med Claude API gør Anthropic ikke det som standard.
-* **Arbejdsnoter (Kompan):** Brug ikke gratis Gemini til dem, medmindre din arbejdsgiver er indforstået. Alternativer er Claude API med et lille forudbetalt beløb og en lav udgiftsgrænse, eller at lade være med at lægge den notesbog ind.
+* **Arbejdsnoter (Kompan):** Notesbogen er sat til gratis Gemini med din arbejdsgivers accept. Skal den ændres, kan du sætte `provider: claude_api` på notesbogen eller fjerne den.
 * **Pris:** Gemini gratis niveau koster 0 kroner, men har kvoter, og vilkårene kan ændre sig. Claude API koster pr. side. Sæt altid en månedlig grænse, og følg forbruget de første dage.
 * API nøgler og Drive koden ligger i add on'ets indstillinger i Home Assistant. Giv ikke andre adgang til din Home Assistant konto, og kryptér dine backups (Google Drive Backup kan kryptere med adgangskode).
 * Slå Telnet fra på din Synology. Det sender adgangskoden ukrypteret.
